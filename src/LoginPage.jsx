@@ -1,49 +1,55 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
-import { useNavigate } from 'react-router-dom';
-
-
+import { Link, useNavigate } from 'react-router-dom';
 
 const LoginPage = () => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const navigate = useNavigate();
 
-
   const handleLogin = async (e) => {
-  e.preventDefault();
+    e.preventDefault();
 
-  const formData = new URLSearchParams();
-  formData.append('username', username);
-  formData.append('password', password);
+    /* TEMPORARY: simulate login success (if backend is not running)
+    localStorage.setItem('isLoggedIn', 'true');
+    navigate('/welcome');*/
 
-  try {
-    const response = await fetch('http://127.0.0.1:5000/login', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-      },
-      body: formData.toString(),
-      credentials: 'include', // Important for session handling
-    });
+    // UNCOMMENT below code if backend is working
+    
+    const formData = new URLSearchParams();
+    formData.append('username', username);
+    formData.append('password', password);
 
-    const result = await response.json();
+    try {
+      const response = await fetch('http://127.0.0.1:5000/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: formData.toString(),
+        credentials: 'include',
+      });
 
-    if (response.ok) {
-      console.log('Login successful:', result.message);
-      navigate('/welcome');
-      // e.g., redirect or update UI
-    } else {
-      console.error('Login failed:', result.error);
-      alert(result.error);
+      if (response.status === 429) {
+        alert("Too many login attempts. Please try again later.");
+        return;
+      }
+
+      const result = await response.json();
+
+      if (response.ok) {
+        console.log('Login successful:', result.message);
+        localStorage.setItem('isLoggedIn', 'true');
+        navigate('/welcome');
+      } else {
+        console.error('Login failed:', result.error);
+        alert(result.error);
+      }
+    } catch (error) {
+      console.error('Network error:', error);
+      alert('Network error occurred. Please check the server.');
     }
-  } catch (error) {
-    console.error('Network error:', error);
-    alert('Network error occurred. Please check the server.');
-  }
-};
-
-
+    
+  };
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-gray-100">
